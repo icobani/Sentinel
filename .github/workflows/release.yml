@@ -25,6 +25,17 @@ jobs:
             os_name: Linux
             ext: ""
             archive: tar.gz
+          - goos: linux
+            goarch: arm64
+            os_name: Linux-ARM64
+            ext: ""
+            archive: tar.gz
+          - goos: linux
+            goarch: arm
+            goarm: "7"
+            os_name: Linux-ARMv7
+            ext: ""
+            archive: tar.gz
           - goos: darwin
             goarch: amd64
             os_name: macOS-Intel
@@ -61,6 +72,7 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
           CGO_ENABLED: 0
         run: |
           VERSION=${GITHUB_REF_NAME#v}
