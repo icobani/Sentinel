@@ -7,16 +7,16 @@ class Sentinel < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-darwin-arm64.tar.gz"
-      sha256 "28b6d3d9d6cd4c94f8e3ce5fda916b05f49a8536b12ea3e5ab1a6b0fb5886dba"
+      sha256 "96fef64a730ab6b820a9982dd048b1db2368ddbe64e23fed8589f3d9b88caca7"
     else
       url "https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-darwin-amd64.tar.gz"
-      sha256 "f973f46404c17afe5a4bdd4d3197091fc08a943d916650f8d2e0ac270589c7fb"
+      sha256 "9033f8a00466e62cf290c2aa7cbb57a846f479db2a59ffb954a32162533cf996"
     end
   end
 
   on_linux do
     url "https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-linux-amd64.tar.gz"
-    sha256 "f51583aa7425854b104d1a81ac333b101a6a2a8892d0f244fdab1838e4110317"
+    sha256 "4d4573a0a11a927e32f9481751338072a5c32ac6ec48ec7d945faa10c61dfac9"
   end
 
   def install

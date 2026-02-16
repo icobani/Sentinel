@@ -54,6 +54,7 @@ web/sentinel-ui/dist/
 # OS
 .DS_Store
 Thumbs.db
+*.url
 
 # Claude Code
 .claude/
