@@ -1,0 +1,135 @@
+<div class="grouped-events-container">
+  <div class="section-header">
+    <h2 class="section-title">{{ 'dashboard.recent_events' | translate }}</h2>
+  </div>
+
+  @if (events.length === 0) {
+    <app-empty-state
+      icon="event_note"
+      title="empty.no_events"
+      message="empty.no_events_message"
+    />
+  } @else {
+    <div class="events-list">
+      @for (group of groupedEvents; track group.watcher_id + '-' + group.path) {
+        <mat-card class="event-group-card" @slideIn>
+          <mat-card-header>
+            <div class="group-header">
+              <mat-icon class="folder-icon">folder</mat-icon>
+              <div class="group-info">
+                <h3 class="group-path">{{ group.path }}</h3>
+                <p class="group-watcher-name">{{ group.watcher_name }}</p>
+              </div>
+            </div>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="event-items">
+              @for (event of group.events; track event.id) {
+                <div class="event-item" [class.expanded]="isEventExpanded(event.id)">
+                  <div class="event-summary">
+                    <div class="event-main">
+                      <mat-icon
+                        [class]="'event-icon ' + getEventIconColor(event.event_type)"
+                        [matTooltip]="getEventLabel(event.event_type)">
+                        {{ getEventIcon(event.event_type) }}
+                      </mat-icon>
+
+                      <span class="event-filename">{{ event.file_name }}</span>
+
+                      <span class="event-type">{{ getEventLabel(event.event_type) }}</span>
+
+                      <span class="event-time">{{ event.timestamp | formatDate }}</span>
+                    </div>
+
+                    <div class="event-actions">
+                      @if (hasWebhookInfo(event)) {
+                        <app-webhook-status-icon
+                          [statusCode]="event.webhook_status"
+                          [errorMessage]="event.webhook_error"
+                          [retryCount]="event.retry_count"
+                        />
+                      }
+
+                      <button
+                        mat-icon-button
+                        class="more-button"
+                        (click)="toggleEventDetails(event.id)"
+                        [attr.aria-label]="'common.more' | translate">
+                        <mat-icon>{{ isEventExpanded(event.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  @if (isEventExpanded(event.id)) {
+                    <div class="event-details" @slideIn>
+                      <div class="detail-row">
+                        <span class="detail-label">{{ 'events.full_path' | translate }}:</span>
+                        <span class="detail-value">{{ event.file_path }}</span>
+                      </div>
+
+                      @if (event.file_size) {
+                        <div class="detail-row">
+                          <span class="detail-label">{{ 'events.file_size' | translate }}:</span>
+                          <span class="detail-value">{{ event.file_size | fileSize }}</span>
+                        </div>
+                      }
+
+                      <div class="detail-row">
+                        <span class="detail-label">{{ 'events.timestamp' | translate }}:</span>
+                        <span class="detail-value">{{ event.timestamp | formatDate }}</span>
+                      </div>
+
+                      @if (event.old_path) {
+                        <div class="detail-row">
+                          <span class="detail-label">{{ 'events.old_path' | translate }}:</span>
+                          <span class="detail-value">{{ event.old_path }}</span>
+                        </div>
+                      }
+
+                      @if (hasWebhookInfo(event)) {
+                        <div class="webhook-details">
+                          <h4 class="webhook-details-title">{{ 'events.webhook_details' | translate }}</h4>
+
+                          <div class="detail-row">
+                            <span class="detail-label">{{ 'events.webhook_status' | translate }}:</span>
+                            <span class="detail-value">{{ event.webhook_status }}</span>
+                          </div>
+
+                          @if (event.webhook_error) {
+                            <div class="detail-row">
+                              <span class="detail-label">{{ 'events.webhook_error' | translate }}:</span>
+                              <span class="detail-value error-text">{{ event.webhook_error }}</span>
+                            </div>
+                          }
+
+                          @if (event.retry_count !== undefined) {
+                            <div class="detail-row">
+                              <span class="detail-label">{{ 'events.retry_count' | translate }}:</span>
+                              <span class="detail-value">{{ event.retry_count }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <div class="view-more-container">
+      <button
+        mat-raised-button
+        color="primary"
+        class="view-more-button"
+        [routerLink]="['/logs']">
+        {{ 'dashboard.view_more' | translate }}
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  }
+</div>

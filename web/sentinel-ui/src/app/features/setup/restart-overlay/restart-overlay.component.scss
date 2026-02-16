@@ -1,0 +1,176 @@
+.restart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+
+  .restart-content {
+    text-align: center;
+    color: white;
+    max-width: 500px;
+    padding: 48px;
+
+    .icon-container {
+      margin-bottom: 32px;
+
+      .restart-icon {
+        font-size: 96px;
+        width: 96px;
+        height: 96px;
+        transition: transform 0.3s ease;
+
+        &.spinning {
+          animation: rotate 2s linear infinite;
+        }
+      }
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 500;
+      margin: 0 0 16px 0;
+      color: white;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 0 0 32px 0;
+      opacity: 0.9;
+    }
+
+    .countdown-display {
+      margin: 32px 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .progress-ring {
+        transform: rotate(-90deg);
+
+        .progress-ring-circle-bg {
+          opacity: 0.3;
+        }
+
+        .progress-ring-circle {
+          transition: stroke-dashoffset 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+          stroke-linecap: round;
+        }
+      }
+
+      .countdown-content {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .countdown-number {
+        font-size: 48px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+
+      .countdown-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+      }
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      margin-top: 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      ::ng-deep .mat-mdc-progress-bar-fill::after {
+        background-color: white;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      ::ng-deep .mdc-linear-progress__bar-inner {
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    }
+
+    .retry-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+      font-size: 14px;
+      opacity: 0.9;
+
+      mat-icon.spinning {
+        animation: rotate 1s linear infinite;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 768px) {
+  .restart-overlay {
+    .restart-content {
+      padding: 32px 24px;
+
+      .icon-container .restart-icon {
+        font-size: 72px;
+        width: 72px;
+        height: 72px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .countdown-display .countdown-number {
+        font-size: 56px;
+      }
+    }
+  }
+}

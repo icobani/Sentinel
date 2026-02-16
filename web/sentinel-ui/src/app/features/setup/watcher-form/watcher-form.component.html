@@ -1,0 +1,234 @@
+<div class="watcher-form-container">
+  <div class="header">
+    <h1>{{ (isEditMode ? 'setup.edit_watcher' : 'setup.add_watcher') | translate }}</h1>
+  </div>
+
+  @if (loading()) {
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-state">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>{{ 'common.loading' | translate }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>{{ 'setup.config_info' | translate }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'setup.watcher_name' | translate }}</mat-label>
+              <input matInput formControlName="name" [placeholder]="'setup.watcher_name' | translate">
+              <mat-error>{{ 'setup.validation.name_required' | translate }}</mat-error>
+            </mat-form-field>
+
+            <div class="path-field-group full-width">
+              <mat-form-field appearance="outline" class="path-input">
+                <mat-label>{{ 'setup.directory_path' | translate }}</mat-label>
+                <input matInput formControlName="path" [placeholder]="'setup.directory_path' | translate">
+                <mat-error>{{ 'setup.validation.path_required' | translate }}</mat-error>
+              </mat-form-field>
+              <button
+                type="button"
+                mat-raised-button
+                color="accent"
+                (click)="onValidatePath()"
+                [disabled]="validatingPath()">
+                @if (validatingPath()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                } @else {
+                  <mat-icon>check_circle</mat-icon>
+                }
+                {{ 'setup.validate_path' | translate }}
+              </button>
+            </div>
+
+            @if (pathValidation(); as validation) {
+              <div class="validation-message full-width" [class.valid]="validation.valid" [class.invalid]="!validation.valid">
+                <mat-icon>{{ validation.valid ? 'check_circle' : 'error' }}</mat-icon>
+                <span>{{ validation.message }}</span>
+              </div>
+            }
+
+            <div class="mode-selector full-width">
+              <label>{{ 'setup.mode' | translate }}</label>
+              <mat-radio-group formControlName="mode">
+                <mat-radio-button [value]="WatchMode.WATCH">
+                  {{ 'setup.watch_mode' | translate }}
+                </mat-radio-button>
+                <mat-radio-button [value]="WatchMode.POLL">
+                  {{ 'setup.poll_mode' | translate }}
+                </mat-radio-button>
+              </mat-radio-group>
+            </div>
+
+            @if (isPollMode) {
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'setup.poll_interval' | translate }}</mat-label>
+                <input matInput formControlName="poll_interval" placeholder="5s">
+                <mat-hint>{{ 'setup.poll_interval_hint' | translate }}</mat-hint>
+              </mat-form-field>
+            }
+
+            <div class="toggle-field">
+              <mat-slide-toggle formControlName="recursive">
+                {{ 'setup.recursive' | translate }}
+              </mat-slide-toggle>
+            </div>
+
+            <div class="filter-section full-width">
+              <label>{{ 'setup.include_filters' | translate }}</label>
+              <mat-chip-grid #includeChipGrid>
+                @for (filter of form.get('include_filters')?.value; track filter) {
+                  <mat-chip-row (removed)="removeIncludeFilter(filter)">
+                    {{ filter }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                }
+                <input
+                  placeholder="*.json, *.xml, *.csv"
+                  [matChipInputFor]="includeChipGrid"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  (matChipInputTokenEnd)="addIncludeFilter($event)"
+                />
+              </mat-chip-grid>
+            </div>
+
+            <div class="filter-section full-width">
+              <label>{{ 'setup.exclude_filters' | translate }}</label>
+              <mat-chip-grid #excludeChipGrid>
+                @for (filter of form.get('exclude_filters')?.value; track filter) {
+                  <mat-chip-row (removed)="removeExcludeFilter(filter)">
+                    {{ filter }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                }
+                <input
+                  placeholder="*.tmp, *.swp, *.bak"
+                  [matChipInputFor]="excludeChipGrid"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  (matChipInputTokenEnd)="addExcludeFilter($event)"
+                />
+              </mat-chip-grid>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>{{ 'setup.webhook_config' | translate }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'setup.webhook_url' | translate }}</mat-label>
+              <input matInput type="url" formControlName="webhook_url" placeholder="https://api.example.com/hooks/events">
+              <mat-icon matPrefix>webhook</mat-icon>
+            </mat-form-field>
+
+            @if (hasWebhook) {
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'setup.webhook_timeout' | translate }}</mat-label>
+                <input matInput formControlName="webhook_timeout" placeholder="10s">
+                <mat-hint>{{ 'setup.timeout_hint' | translate }}</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'setup.max_attempts' | translate }}</mat-label>
+                <input matInput type="number" formControlName="max_attempts" min="1">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'setup.backoff' | translate }}</mat-label>
+                <input matInput formControlName="backoff" placeholder="2s">
+                <mat-hint>{{ 'setup.backoff_hint' | translate }}</mat-hint>
+              </mat-form-field>
+
+              <div class="headers-section full-width">
+                <div class="headers-header">
+                  <label>{{ 'setup.webhook_headers' | translate }}</label>
+                  <button type="button" mat-button (click)="addHeader()">
+                    <mat-icon>add</mat-icon>
+                    {{ 'setup.add_header' | translate }}
+                  </button>
+                </div>
+
+                <div formArrayName="webhook_headers">
+                  @for (header of webhookHeaders.controls; track $index; let i = $index) {
+                    <div [formGroupName]="i" class="header-row">
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'setup.header_key' | translate }}</mat-label>
+                        <input matInput formControlName="key" placeholder="Authorization">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'setup.header_value' | translate }}</mat-label>
+                        <input matInput formControlName="value" placeholder="Bearer token123">
+                      </mat-form-field>
+                      <button type="button" mat-icon-button color="warn" (click)="removeHeader(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              @if (isEditMode) {
+                <div class="webhook-test full-width">
+                  <button
+                    type="button"
+                    mat-raised-button
+                    color="accent"
+                    (click)="onTestWebhook()"
+                    [disabled]="testingWebhook()">
+                    @if (testingWebhook()) {
+                      <mat-spinner diameter="20"></mat-spinner>
+                    } @else {
+                      <mat-icon>send</mat-icon>
+                    }
+                    {{ 'setup.test_webhook' | translate }}
+                  </button>
+
+                  @if (webhookTestResult(); as result) {
+                    <div class="test-result" [class.success]="result.status === 200" [class.error]="result.status !== 200">
+                      <mat-icon>{{ result.status === 200 ? 'check_circle' : 'error' }}</mat-icon>
+                      <div class="result-info">
+                        <span>{{ 'setup.status_code' | translate }}: {{ result.status }}</span>
+                        <span>{{ 'setup.response_time' | translate }}: {{ result.response_time }}ms</span>
+                        @if (result.error) {
+                          <span class="error-message">{{ result.error }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="form-actions">
+        <button type="button" mat-button (click)="onCancel()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="submit" mat-raised-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          }
+          {{ (isEditMode ? 'common.update' : 'common.create') | translate }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

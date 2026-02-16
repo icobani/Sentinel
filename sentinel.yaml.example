@@ -1,0 +1,60 @@
+database:
+    path: ./sentinel.db
+    retention: 30d  # Automatically delete events older than 30 days (e.g., "30d", "7d", "24h")
+
+logging:
+    file: ./sentinel.log
+    level: info
+    output: stdout
+
+server:
+    cors:
+        allowed_origins:
+            - '*'
+    host: 0.0.0.0
+    port: 8080
+    tls:
+        cert_file: /path/to/cert.pem
+        enabled: false
+        key_file: /path/to/key.pem
+
+watchers:
+    - name: "my-watcher"
+      path: /path/to/watch/directory
+      mode: watch       # "watch" for local dirs (fsnotify), "poll" for network shares
+      recursive: true
+      filters:
+          include:
+              - '*.json'
+              - '*.xml'
+              - '*.csv'
+          exclude:
+              - '*.tmp'
+              - '*.swp'
+      webhook:
+          url: https://your-webhook-endpoint.example.com/hook
+          headers:
+              Authorization: "Bearer <your-token-here>"
+          timeout: 10s
+          retry:
+              max_attempts: 3
+              backoff: 2s
+
+    # Example: Network share with polling mode
+    # - name: "network-reports"
+    #   path: "\\\\fileserver\\shared\\reports"
+    #   mode: poll
+    #   poll_interval: 5s
+    #   recursive: true
+    #   filters:
+    #       include:
+    #           - '*.pdf'
+    #           - '*.xlsx'
+    #   webhook:
+    #       url: https://your-webhook-endpoint.example.com/reports
+    #       headers:
+    #           Authorization: "Bearer <your-token-here>"
+    #       timeout: 15s
+    #       retry:
+    #           max_attempts: 5
+    #           backoff: 3s

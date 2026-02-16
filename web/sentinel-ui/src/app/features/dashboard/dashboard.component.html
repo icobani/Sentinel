@@ -1,0 +1,18 @@
+<div class="dashboard-container">
+  <h1 class="dashboard-title">{{ 'dashboard.title' | translate }}</h1>
+
+  @if (isLoading()) {
+    <app-loading-skeleton [count]="4" />
+    <app-loading-skeleton [count]="5" />
+  } @else {
+    <app-summary-cards [status]="systemStatus()" />
+    <app-grouped-events [events]="recentEvents()" />
+  }
+
+  @if (wsConnectionError()) {
+    <div class="connection-warning">
+      <mat-icon>warning</mat-icon>
+      <span>{{ 'dashboard.websocket_disconnected' | translate }}</span>
+    </div>
+  }
+</div>

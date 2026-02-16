@@ -1,0 +1,31 @@
+<div class="app-container">
+  <app-toolbar
+    (toggleSidebar)="toggleSidebar()"
+    (languageChange)="onLanguageChange($event)"
+    (themeChange)="onThemeChange($event)"
+  ></app-toolbar>
+
+  @if (showRestartBanner()) {
+    <app-pending-restart-banner
+      (restart)="onRestartService()"
+    ></app-pending-restart-banner>
+  }
+
+  <div class="main-container">
+    <app-sidebar
+      [collapsed]="sidebarCollapsed()"
+      [isOnline]="isOnline()"
+      [version]="version()"
+    ></app-sidebar>
+
+    <main class="content">
+      <div [@routeAnimations]="getRouteAnimationData()">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>
+
+@if (showRestartOverlay()) {
+  <app-restart-overlay @fadeInOut />
+}

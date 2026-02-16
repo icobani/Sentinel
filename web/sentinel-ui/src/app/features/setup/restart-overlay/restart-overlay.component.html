@@ -1,0 +1,52 @@
+<div class="restart-overlay">
+  <div class="restart-content">
+    <div class="icon-container">
+      <mat-icon class="restart-icon" [class.spinning]="countdown() > 0">refresh</mat-icon>
+    </div>
+
+    <h1>{{ 'restart.countdown' | translate }}</h1>
+    <p>{{ 'restart.please_wait' | translate }}</p>
+
+    <div class="countdown-display">
+      <svg class="progress-ring" width="120" height="120">
+        <circle
+          class="progress-ring-circle-bg"
+          stroke="#e0e0e0"
+          stroke-width="8"
+          fill="transparent"
+          r="52"
+          cx="60"
+          cy="60"
+        />
+        <circle
+          class="progress-ring-circle"
+          stroke="#3b82f6"
+          stroke-width="8"
+          fill="transparent"
+          r="52"
+          cx="60"
+          cy="60"
+          [style.strokeDasharray]="circumference"
+          [style.strokeDashoffset]="strokeDashoffset()"
+        />
+      </svg>
+      <div class="countdown-content">
+        <span class="countdown-number">{{ countdown() }}</span>
+        <span class="countdown-label">sec</span>
+      </div>
+    </div>
+
+    <mat-progress-bar
+      mode="determinate"
+      [value]="progress()"
+      class="progress-bar">
+    </mat-progress-bar>
+
+    @if (retryAttempt() > 0) {
+      <div class="retry-info">
+        <mat-icon class="spinning">sync</mat-icon>
+        <span>{{ 'websocket.reconnecting' | translate }} {{ retryAttempt() }} / {{ maxRetries }}</span>
+      </div>
+    }
+  </div>
+</div>

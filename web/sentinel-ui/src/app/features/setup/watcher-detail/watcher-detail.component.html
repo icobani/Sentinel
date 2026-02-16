@@ -1,0 +1,268 @@
+<div class="watcher-detail-container">
+  <div class="header">
+    <button mat-button (click)="onBackToList()">
+      <mat-icon>arrow_back</mat-icon>
+      {{ 'setup.watchers' | translate }}
+    </button>
+  </div>
+
+  @if (watcher(); as w) {
+    <div class="watcher-info-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <div class="title-row">
+              <span>{{ w.name }}</span>
+              <div class="title-actions">
+                <app-status-badge [status]="w.status || WatcherStatus.INACTIVE" />
+                <button mat-raised-button color="primary" (click)="onEditWatcher()">
+                  <mat-icon>edit</mat-icon>
+                  {{ 'common.edit' | translate }}
+                </button>
+              </div>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="config-grid">
+            <div class="config-item">
+              <label>{{ 'setup.directory_path' | translate }}</label>
+              <div class="value">
+                <mat-icon>folder</mat-icon>
+                <span>{{ w.path }}</span>
+              </div>
+            </div>
+
+            <div class="config-item">
+              <label>{{ 'setup.mode' | translate }}</label>
+              <div class="value">
+                <mat-chip highlighted [color]="w.mode === WatchMode.WATCH ? 'primary' : 'accent'">
+                  {{ (w.mode === WatchMode.WATCH ? 'setup.watch_mode' : 'setup.poll_mode') | translate }}
+                </mat-chip>
+              </div>
+            </div>
+
+            @if (w.mode === WatchMode.POLL && w.poll_interval) {
+              <div class="config-item">
+                <label>{{ 'setup.poll_interval' | translate }}</label>
+                <div class="value">
+                  <span>{{ w.poll_interval }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="config-item">
+              <label>{{ 'setup.recursive' | translate }}</label>
+              <div class="value">
+                <mat-icon [class.enabled]="w.recursive">
+                  {{ w.recursive ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                <span>{{ (w.recursive ? 'common.yes' : 'common.no') | translate }}</span>
+              </div>
+            </div>
+
+            @if (w.filters?.include && (w.filters?.include?.length ?? 0) > 0) {
+              <div class="config-item">
+                <label>{{ 'setup.include_filters' | translate }}</label>
+                <div class="value">
+                  <mat-chip-set>
+                    @for (filter of w.filters?.include; track filter) {
+                      <mat-chip>{{ filter }}</mat-chip>
+                    }
+                  </mat-chip-set>
+                </div>
+              </div>
+            }
+
+            @if (w.filters?.exclude && (w.filters?.exclude?.length ?? 0) > 0) {
+              <div class="config-item">
+                <label>{{ 'setup.exclude_filters' | translate }}</label>
+                <div class="value">
+                  <mat-chip-set>
+                    @for (filter of w.filters?.exclude; track filter) {
+                      <mat-chip>{{ filter }}</mat-chip>
+                    }
+                  </mat-chip-set>
+                </div>
+              </div>
+            }
+
+            @if (w.webhook?.url) {
+              <div class="config-item full-width">
+                <label>{{ 'setup.webhook_url' | translate }}</label>
+                <div class="value">
+                  <mat-icon>webhook</mat-icon>
+                  <span>{{ w.webhook?.url }}</span>
+                </div>
+              </div>
+
+              @if (w.webhook?.timeout) {
+                <div class="config-item">
+                  <label>{{ 'setup.webhook_timeout' | translate }}</label>
+                  <div class="value">
+                    <span>{{ w.webhook?.timeout }}</span>
+                  </div>
+                </div>
+              }
+
+              @if (w.webhook?.retry) {
+                <div class="config-item">
+                  <label>{{ 'setup.max_attempts' | translate }}</label>
+                  <div class="value">
+                    <span>{{ w.webhook?.retry?.max_attempts }}</span>
+                  </div>
+                </div>
+
+                <div class="config-item">
+                  <label>{{ 'setup.backoff' | translate }}</label>
+                  <div class="value">
+                    <span>{{ w.webhook?.retry?.backoff }}</span>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="events-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>{{ 'setup.event_logs' | translate }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="filters">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>{{ 'common.search' | translate }}</mat-label>
+              <input matInput [formControl]="searchControl" [placeholder]="'form.search_by_filename' | translate">
+              <mat-icon matPrefix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'logs.filter_by_event_type' | translate }}</mat-label>
+              <mat-select [formControl]="eventTypeControl">
+                <mat-option [value]="''">{{ 'form.all' | translate }}</mat-option>
+                @for (type of eventTypes; track type) {
+                  <mat-option [value]="type">
+                    {{ ('events.' + type) | translate }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'form.from' | translate }}</mat-label>
+              <input matInput [matDatepicker]="fromPicker" [formControl]="fromDateControl">
+              <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+              <mat-datepicker #fromPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'form.to' | translate }}</mat-label>
+              <input matInput [matDatepicker]="toPicker" [formControl]="toDateControl">
+              <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+              <mat-datepicker #toPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          @if (loading()) {
+            <app-loading-skeleton [count]="5" [height]="80" variant="line" />
+          } @else if (events().length === 0) {
+            <app-empty-state
+              icon="event_note"
+              message="empty.no_events"
+            />
+          } @else {
+            <div class="events-list" (scroll)="onScroll($event)" #logsContainer>
+              @for (event of events(); track event.id) {
+                <div class="event-item" [class.expanded]="isEventExpanded(event.id)">
+                  <div class="event-header" (click)="toggleEventDetails(event.id)">
+                    <div class="event-main">
+                      <mat-icon [class]="getEventTypeColor(event.event_type)">
+                        {{ getEventTypeIcon(event.event_type) }}
+                      </mat-icon>
+                      <div class="event-info">
+                        <div class="file-name">{{ event.file_name }}</div>
+                        <div class="event-meta">
+                          <span class="event-type">{{ ('events.' + event.event_type) | translate }}</span>
+                          <span class="separator">•</span>
+                          <span class="timestamp">{{ event.timestamp | formatDate }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="event-actions">
+                      @if (event.webhook_status) {
+                        <app-webhook-status-icon
+                          [statusCode]="event.webhook_status"
+                          [errorMessage]="event.webhook_error"
+                          [retryCount]="event.retry_count"
+                        />
+                      }
+                      <mat-icon class="expand-icon">
+                        {{ isEventExpanded(event.id) ? 'expand_less' : 'expand_more' }}
+                      </mat-icon>
+                    </div>
+                  </div>
+
+                  @if (isEventExpanded(event.id)) {
+                    <div class="event-details">
+                      <div class="detail-row">
+                        <label>{{ 'events.full_path' | translate }}</label>
+                        <span>{{ event.file_path }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <label>{{ 'events.file_size' | translate }}</label>
+                        <span>{{ event.file_size | fileSize }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <label>{{ 'events.timestamp' | translate }}</label>
+                        <span>{{ event.timestamp | formatDate }}</span>
+                      </div>
+                      @if (event.old_path) {
+                        <div class="detail-row">
+                          <label>{{ 'events.old_path' | translate }}</label>
+                          <span>{{ event.old_path }}</span>
+                        </div>
+                      }
+                      @if (event.webhook_status) {
+                        <div class="detail-row">
+                          <label>{{ 'events.webhook_status' | translate }}</label>
+                          <span>{{ event.webhook_status }}</span>
+                        </div>
+                      }
+                      @if (event.webhook_error) {
+                        <div class="detail-row">
+                          <label>{{ 'events.webhook_error' | translate }}</label>
+                          <span class="error-text">{{ event.webhook_error }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (loadingMore()) {
+                <div class="loading-more">
+                  <mat-spinner diameter="32"></mat-spinner>
+                  <span>{{ 'common.loading' | translate }}</span>
+                </div>
+              }
+
+              @if (!hasMore() && events().length > 0) {
+                <div class="no-more">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>{{ 'empty.end_of_list' | translate }}</span>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  } @else {
+    <app-loading-skeleton [count]="2" [height]="300" variant="card" />
+  }
+</div>

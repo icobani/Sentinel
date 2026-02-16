@@ -1,0 +1,129 @@
+<div class="watcher-list-container">
+  <div class="header">
+    <h1>{{ 'setup.watchers' | translate }}</h1>
+    <button mat-raised-button color="primary" (click)="onAddWatcher()">
+      <mat-icon>add</mat-icon>
+      {{ 'setup.add_watcher' | translate }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-loading-skeleton [count]="3" height="200px" />
+  } @else if (watchers().length === 0) {
+    <app-empty-state
+      icon="folder_open"
+      message="empty.no_watchers"
+    />
+  } @else {
+    <div class="watcher-grid">
+      @for (watcher of watchers(); track watcher.id) {
+        <mat-card class="watcher-card" (click)="onViewDetails(watcher.id)">
+          <mat-card-header>
+            <mat-card-title>
+              <div class="title-row">
+                <span>{{ watcher.name }}</span>
+                <app-status-badge [status]="watcher.status || WatcherStatus.INACTIVE" />
+              </div>
+            </mat-card-title>
+            <mat-card-subtitle>
+              <div class="subtitle-row">
+                <mat-icon>folder</mat-icon>
+                <span class="path" [matTooltip]="watcher.path">
+                  {{ watcher.path | truncate:50 }}
+                </span>
+              </div>
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="info-row">
+              <mat-chip-set>
+                <mat-chip [color]="getModeColor(watcher.mode)" highlighted>
+                  {{ getModeLabel(watcher.mode) | translate }}
+                </mat-chip>
+                @if (watcher.recursive) {
+                  <mat-chip>
+                    <mat-icon>account_tree</mat-icon>
+                    {{ 'setup.recursive' | translate }}
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            </div>
+
+            @if (watcher.webhook?.url) {
+              <div class="webhook-info">
+                <mat-icon>webhook</mat-icon>
+                <span [matTooltip]="watcher.webhook?.url || ''">
+                  {{ (watcher.webhook?.url || '') | truncate:40 }}
+                </span>
+              </div>
+            }
+
+            @if (watcher.last_event_at) {
+              <div class="last-event">
+                <mat-icon>schedule</mat-icon>
+                <span>
+                  {{ 'setup.last_event' | translate }}: {{ watcher.last_event_at | relativeTime }}
+                </span>
+              </div>
+            } @else {
+              <div class="last-event no-events">
+                <mat-icon>info</mat-icon>
+                <span>{{ 'setup.no_events' | translate }}</span>
+              </div>
+            }
+          </mat-card-content>
+
+          <mat-card-actions>
+            <div class="actions">
+              <div class="action-buttons">
+                @if (watcher.status === WatcherStatus.ACTIVE) {
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    [disabled]="isActionInProgress(watcher.id)"
+                    (click)="onStopWatcher(watcher.id, $event)"
+                    [matTooltip]="'setup.stop' | translate">
+                    <mat-icon>stop</mat-icon>
+                  </button>
+                } @else {
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    [disabled]="isActionInProgress(watcher.id)"
+                    (click)="onStartWatcher(watcher.id, $event)"
+                    [matTooltip]="'setup.start' | translate">
+                    <mat-icon>play_arrow</mat-icon>
+                  </button>
+                }
+                <button
+                  mat-icon-button
+                  [disabled]="isActionInProgress(watcher.id)"
+                  (click)="onRestartWatcher(watcher.id, $event)"
+                  [matTooltip]="'setup.restart' | translate">
+                  <mat-icon>refresh</mat-icon>
+                </button>
+              </div>
+
+              <div class="edit-delete-buttons">
+                <button
+                  mat-button
+                  (click)="onEditWatcher(watcher.id, $event)">
+                  <mat-icon>edit</mat-icon>
+                  {{ 'common.edit' | translate }}
+                </button>
+                <button
+                  mat-button
+                  color="warn"
+                  (click)="onDeleteWatcher(watcher, $event)">
+                  <mat-icon>delete</mat-icon>
+                  {{ 'common.delete' | translate }}
+                </button>
+              </div>
+            </div>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

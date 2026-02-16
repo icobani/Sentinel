@@ -1,0 +1,80 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# Build artifacts
+/sentinel
+/sentinel-*
+/release/
+/bin/
+*.db
+*.zip
+build.log
+.build-logs/
+
+# Configuration (use sentinel.yaml.example as template)
+sentinel.yaml
+
+
+# Angular
+/dist/
+web/sentinel-ui/node_modules/
+web/sentinel-ui/.angular/
+web/sentinel-ui/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Generated docs/summaries
+*.md.bak
+CRITICAL_FIXES_*.md
+PHASE*_COMPLETE.md
+PHASE*_CRITICAL_FIXES.md
+PHASE*_ANGULAR_FIXES.md
+PHASE*-SUMMARY.md
+DEPLOYMENT.md
+
+# Logs
+server.log
+*.log
+
+# Test/watch directories
+watch1/
+watch2/
+
+# Build scripts (contains local paths)
+build-all.sh
