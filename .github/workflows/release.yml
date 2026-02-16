@@ -206,3 +206,62 @@ jobs:
           git add sentinel.rb
           git commit -m "Update sentinel to v${{ steps.version.outputs.version }}"
           git push
+
+  update-scoop:
+    name: Update Scoop Manifest
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download Windows release and compute SHA256
+        id: sha
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          curl -sL "https://github.com/icobani/Sentinel/releases/download/v${VERSION}/sentinel-windows-amd64.zip" -o windows.zip
+          echo "hash=$(sha256sum windows.zip | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Scoop bucket
+        uses: actions/checkout@v4
+        with:
+          repository: icobani/scoop-sentinel
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Update manifest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          HASH: ${{ steps.sha.outputs.hash }}
+        run: |
+          cat > sentinel.json << EOF
+          {
+              "version": "${VERSION}",
+              "description": "Cross-platform file system watcher with real-time webhook notifications and web-based management interface",
+              "homepage": "https://github.com/icobani/Sentinel",
+              "license": "MIT",
+              "architecture": {
+                  "64bit": {
+                      "url": "https://github.com/icobani/Sentinel/releases/download/v${VERSION}/sentinel-windows-amd64.zip",
+                      "hash": "${HASH}"
+                  }
+              },
+              "bin": "sentinel.exe",
+              "checkver": "github",
+              "autoupdate": {
+                  "architecture": {
+                      "64bit": {
+                          "url": "https://github.com/icobani/Sentinel/releases/download/v\$version/sentinel-windows-amd64.zip"
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sentinel.json
+          git commit -m "Update sentinel to v${{ steps.version.outputs.version }}"
+          git push
