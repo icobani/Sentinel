@@ -65,19 +65,10 @@ Searchable, filterable event log with pagination and Excel export. Select and de
 ```bash
 brew tap icobani/sentinel
 brew install icobani/sentinel/sentinel
-./sentinel 
-```
-
-```bash
-# Edit config
-nano /opt/homebrew/etc/sentinel.yaml
-
-# Run
 sentinel
-
-# Or start as background service
-brew services start sentinel
 ```
+
+On first run, Sentinel automatically creates a default `sentinel.yaml` in the current directory if one doesn't exist. You can then add watchers through the web UI at `http://localhost:8080` or edit the config file directly.
 
 ### Windows (Scoop)
 
@@ -144,10 +135,48 @@ Requires Go 1.22+ and Node.js 22+.
 git clone https://github.com/icobani/Sentinel.git
 cd Sentinel
 cd web/sentinel-ui && npm install && npm run build && cd ../..
-cp sentinel.yaml.example sentinel.yaml
 go build -o sentinel ./cmd/sentinel
 ./sentinel
 ```
+
+---
+
+## Updating
+
+### macOS (Homebrew)
+
+```bash
+brew update
+brew upgrade sentinel
+```
+
+### Windows (Scoop)
+
+```powershell
+scoop update sentinel
+```
+
+### Linux / Raspberry Pi (Manual)
+
+Download the latest release and replace the binary:
+
+```bash
+# x64
+curl -sL https://github.com/icobani/Sentinel/releases/latest/download/sentinel-linux-amd64.tar.gz | tar xz
+sudo mv sentinel /usr/local/bin/
+
+# ARM64 (Raspberry Pi)
+curl -sL https://github.com/icobani/Sentinel/releases/latest/download/sentinel-linux-arm64.tar.gz | tar xz
+sudo mv sentinel /usr/local/bin/
+```
+
+If running as a systemd service, restart after update:
+
+```bash
+sudo systemctl restart sentinel
+```
+
+Your `sentinel.yaml` and `sentinel.db` are preserved across updates.
 
 ---
 
