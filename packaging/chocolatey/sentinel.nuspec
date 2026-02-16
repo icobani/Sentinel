@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>sentinel</id>
+    <version>1.0.0</version>
+    <title>Sentinel File Watcher</title>
+    <authors>icobani</authors>
+    <owners>icobani</owners>
+    <projectUrl>https://github.com/icobani/Sentinel</projectUrl>
+    <licenseUrl>https://github.com/icobani/Sentinel/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Cross-platform file system watcher with real-time webhook notifications and web-based management interface. Monitors directories for file changes and delivers instant HTTP POST webhook notifications. Includes an embedded Angular web UI for management and monitoring.</description>
+    <summary>File system watcher with webhook notifications and web UI</summary>
+    <tags>file-watcher webhook fsnotify monitor filesystem notifications</tags>
+    <releaseNotes>https://github.com/icobani/Sentinel/releases/tag/v1.0.0</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

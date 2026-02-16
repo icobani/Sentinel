@@ -1,0 +1,29 @@
+PackageIdentifier: icobani.Sentinel
+PackageVersion: 1.0.0
+PackageName: Sentinel
+Publisher: icobani
+License: MIT
+ShortDescription: Cross-platform file system watcher with real-time webhook notifications
+Description: |-
+  Sentinel monitors directories for file changes (create, modify, delete, rename) and delivers
+  instant HTTP POST webhook notifications. Built as a single binary combining a Go backend
+  service with an Angular 21 web interface for complete management and monitoring.
+Tags:
+  - file-watcher
+  - webhook
+  - filesystem
+  - monitoring
+  - notifications
+PackageUrl: https://github.com/icobani/Sentinel
+ReleaseNotesUrl: https://github.com/icobani/Sentinel/releases/tag/v1.0.0
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-windows-amd64.zip
+    InstallerSha256: 62BAD530EABC4BFC3413C478E735D1C40D21CA99B8D9EDC6B18AF87EE16E507C
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: sentinel.exe
+        PortableCommandAlias: sentinel
+ManifestType: singleton
+ManifestVersion: 1.6.0

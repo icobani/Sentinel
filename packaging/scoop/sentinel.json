@@ -1,0 +1,21 @@
+{
+    "version": "1.0.0",
+    "description": "Cross-platform file system watcher with real-time webhook notifications and web-based management interface",
+    "homepage": "https://github.com/icobani/Sentinel",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-windows-amd64.zip",
+            "hash": "62bad530eabc4bfc3413c478e735d1c40d21ca99b8d9edc6b18af87ee16e507c"
+        }
+    },
+    "bin": "sentinel.exe",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/icobani/Sentinel/releases/download/v$version/sentinel-windows-amd64.zip"
+            }
+        }
+    }
+}
