@@ -56,14 +56,9 @@ func main() {
 			break
 		default:
 			// If it's not a known command, treat it as a config file path
-			if _, err := os.Stat(command); err == nil {
-				// File exists, run with custom config
-				runApplication(command)
-				return
-			}
-			fmt.Printf("Unknown command: %s\n\n", command)
-			printUsage()
-			os.Exit(1)
+			// Allow non-existent paths as the config loader will create default config
+			runApplication(command)
+			return
 		}
 	}
 

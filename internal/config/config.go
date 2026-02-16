@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -104,7 +106,20 @@ func Load(configPath string) (*Config, error) {
 	viper.SetDefault("database.retention", "30d")
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		// Check if the error is because the file doesn't exist
+		if errors.Is(err, os.ErrNotExist) || os.IsNotExist(err) {
+			// Create default config file
+			slog.Info("Config file not found, creating default configuration", "path", configPath)
+			if err := createDefaultConfig(configPath); err != nil {
+				return nil, fmt.Errorf("failed to create default config file: %w", err)
+			}
+			// Try reading again
+			if err := viper.ReadInConfig(); err != nil {
+				return nil, fmt.Errorf("failed to read newly created config file: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to read config file: %w", err)
+		}
 	}
 
 	var config Config
@@ -183,5 +198,66 @@ func Reload(configPath string) error {
 	}
 	AppConfig = newConfig
 	slog.Info("Configuration reloaded successfully")
+	return nil
+}
+
+// createDefaultConfig creates a default configuration file
+func createDefaultConfig(configPath string) error {
+	defaultConfig := `# Sentinel Configuration File
+# This file was automatically generated with default values.
+# You can add watchers through the web UI or by editing this file directly.
+
+# Server configuration
+server:
+  port: 8080                    # Web UI and API port
+  host: "0.0.0.0"               # Listen address (0.0.0.0 = all interfaces)
+  cors:
+    allowed_origins: ["*"]      # CORS allowed origins (* = all origins)
+  tls:
+    enabled: false              # Enable HTTPS (requires cert_file and key_file)
+    cert_file: ""               # Path to TLS certificate file
+    key_file: ""                # Path to TLS private key file
+
+# Logging configuration
+logging:
+  level: "info"                 # Log level: debug, info, warn, error
+  output: "stdout"              # Output: stdout or file
+  file: ""                      # Log file path (only used if output = file)
+
+# Database configuration
+database:
+  path: "./sentinel.db"         # SQLite database file path
+  retention: "30d"              # Event log retention period (e.g., 30d, 7d, 24h)
+
+# File watchers configuration
+# Add watchers through the web UI at http://localhost:8080
+# or edit this section manually following the example format:
+#
+# watchers:
+#   - name: "example-watcher"
+#     path: "/path/to/watch"
+#     mode: "watch"             # "watch" for local dirs, "poll" for network shares
+#     recursive: true
+#     filters:
+#       include: ["*.json", "*.xml"]
+#       exclude: ["*.tmp"]
+#     webhook:
+#       url: "https://api.example.com/webhook"
+#       headers:
+#         Authorization: "Bearer your-token"
+#       timeout: "10s"
+#       retry:
+#         max_attempts: 3
+#         backoff: "2s"
+
+watchers: []
+`
+
+	// Write the default config to file
+	if err := os.WriteFile(configPath, []byte(defaultConfig), 0644); err != nil {
+		return fmt.Errorf("failed to write default config file: %w", err)
+	}
+
+	slog.Info("Default configuration file created successfully", "path", configPath)
 	return nil
 }
