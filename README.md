@@ -31,56 +31,113 @@ Sentinel monitors directories for file changes (create, modify, delete, rename) 
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation
 
-### Prerequisites
+### macOS (Homebrew)
 
-- Go 1.22+ (for building from source)
-- Node.js 20.19+ or 22.12+ (for building Angular UI)
+```bash
+brew tap icobani/sentinel
+brew install sentinel
+```
+
+After installation:
+```bash
+# Edit config
+nano /opt/homebrew/etc/sentinel.yaml
+
+# Run interactively
+sentinel
+
+# Or start as a background service
+brew services start sentinel
+```
+
+### Windows (Scoop)
+
+```powershell
+scoop bucket add sentinel https://github.com/icobani/scoop-sentinel
+scoop install sentinel
+```
+
+After installation:
+```powershell
+# Copy example config
+cp ~\scoop\apps\sentinel\current\sentinel.yaml.example sentinel.yaml
+# Edit config, then run
+sentinel.exe
+```
+
+### Windows (Manual)
+
+Download `sentinel-windows-amd64.zip` from [Releases](https://github.com/icobani/Sentinel/releases/latest).
+
+```powershell
+# Extract, edit sentinel.yaml, then run
+sentinel.exe
+
+# Or install as Windows Service (run as Administrator)
+sentinel.exe install
+sentinel.exe start
+```
+
+### Ubuntu / Debian (Intel x64)
+
+```bash
+curl -sL https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-linux-amd64.tar.gz | tar xz
+sudo mv sentinel /usr/local/bin/
+sudo cp sentinel.yaml.example /etc/sentinel.yaml
+sudo nano /etc/sentinel.yaml
+sentinel
+```
+
+### Raspberry Pi (Ubuntu ARM64)
+
+```bash
+curl -sL https://github.com/icobani/Sentinel/releases/download/v1.0.0/sentinel-linux-arm64.tar.gz | tar xz
+sudo mv sentinel /usr/local/bin/
+sudo cp sentinel.yaml.example /etc/sentinel.yaml
+sudo nano /etc/sentinel.yaml
+sentinel
+```
+
+### Linux systemd Service
+
+After installing the binary:
+```bash
+# Install as system service
+sudo sentinel install
+
+# Start and enable on boot
+sudo systemctl start sentinel
+sudo systemctl enable sentinel
+
+# View logs
+sudo journalctl -u sentinel -f
+
+# Uninstall
+sudo sentinel uninstall
+```
 
 ### Build from Source
 
+Requires Go 1.22+ and Node.js 22+.
+
 ```bash
-# Clone the repository
-git clone https://github.com/<your-username>/sentinel.git
-cd sentinel
+git clone https://github.com/icobani/Sentinel.git
+cd Sentinel
 
 # Build Angular frontend
-cd web/sentinel-ui
-npm install
-npm run build
+cd web/sentinel-ui && npm install && npm run build && cd ../..
 
-# Build Go backend (embeds Angular dist)
-cd ../..
-
-# Copy config file
+# Copy and edit config
 cp sentinel.yaml.example sentinel.yaml
-# Edit sentinel.yaml with your settings
 
+# Build and run
 go build -o sentinel ./cmd/sentinel
-
-# Run in interactive mode
 ./sentinel
 ```
 
 The web interface will be available at `http://localhost:8080` (default port).
-
-### Install as System Service
-
-```bash
-# Linux systemd
-sudo ./sentinel install
-sudo systemctl start sentinel
-sudo systemctl enable sentinel
-
-# Windows
-sentinel.exe install
-sc start Sentinel
-
-# macOS launchd
-sudo ./sentinel install
-sudo launchctl load /Library/LaunchDaemons/com.sentinel.service.plist
-```
 
 ---
 
@@ -247,80 +304,6 @@ Your endpoint should return:
 - **Status 200-299** → Success (logged and marked as delivered)
 - **Status 400-499** → Client error (no retry, logged as failed)
 - **Status 500-599** → Server error (retried with exponential backoff)
-
----
-
-## 🔄 Service Management
-
-### Interactive Mode
-
-```bash
-# Run in foreground with console output
-./sentinel
-
-# Access web UI at http://localhost:8080
-```
-
-Press `Ctrl+C` for graceful shutdown.
-
-### Service Mode
-
-#### Linux (systemd)
-
-```bash
-# Install service
-sudo ./sentinel install
-
-# Start service
-sudo systemctl start sentinel
-
-# Enable auto-start on boot
-sudo systemctl enable sentinel
-
-# View logs
-sudo journalctl -u sentinel -f
-
-# Stop service
-sudo systemctl stop sentinel
-
-# Uninstall service
-sudo ./sentinel uninstall
-```
-
-#### Windows
-
-```powershell
-# Run as Administrator
-
-# Install service
-sentinel.exe install
-
-# Start service
-sc start Sentinel
-# Or use Services panel (services.msc)
-
-# Stop service
-sc stop Sentinel
-
-# Uninstall service
-sentinel.exe uninstall
-```
-
-#### macOS (launchd)
-
-```bash
-# Install service
-sudo ./sentinel install
-
-# Load service
-sudo launchctl load /Library/LaunchDaemons/com.sentinel.service.plist
-
-# Unload service
-sudo launchctl unload /Library/LaunchDaemons/com.sentinel.service.plist
-
-# Uninstall service
-sudo ./sentinel uninstall
-```
 
 ---
 
