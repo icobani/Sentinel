@@ -1,25 +1,25 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatChipsModule, MatChipInputEvent } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatRadioModule } from '@angular/material/radio';
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute, Router} from '@angular/router';
+import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {MatCardModule} from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatChipInputEvent, MatChipsModule} from '@angular/material/chips';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatRadioModule} from '@angular/material/radio';
+import {COMMA, ENTER} from '@angular/cdk/keycodes';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {finalize} from 'rxjs';
 
-import { WatcherService } from '../../../core/services/watcher.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
-import { Watcher, WatchMode } from '../../../core/models/watcher.model';
+import {WatcherService} from '../../../core/services/watcher.service';
+import {NotificationService} from '../../../core/services/notification.service';
+import {TranslatePipe} from '../../../shared/pipes/translate.pipe';
+import {Watcher, WatchMode} from '../../../core/models/watcher.model';
 
 interface WebhookHeader {
   key: string;
@@ -108,7 +108,8 @@ export class WatcherFormComponent implements OnInit {
       webhook_timeout: ['10s'],
       webhook_headers: this.fb.array([]),
       max_attempts: [3, [Validators.required, Validators.min(1)]],
-      backoff: ['2s', Validators.required]
+      backoff: ['2s', Validators.required],
+      attach_file: [false]
     });
   }
 
@@ -146,7 +147,8 @@ export class WatcherFormComponent implements OnInit {
       webhook_url: watcher.webhook?.url || '',
       webhook_timeout: watcher.webhook?.timeout || '10s',
       max_attempts: watcher.webhook?.retry?.max_attempts || 3,
-      backoff: watcher.webhook?.retry?.backoff || '2s'
+      backoff: watcher.webhook?.retry?.backoff || '2s',
+      attach_file: watcher.webhook?.attach_file || false
     });
 
     if (watcher.webhook?.headers) {
@@ -313,7 +315,8 @@ export class WatcherFormComponent implements OnInit {
         retry: {
           max_attempts: formValue.max_attempts,
           backoff: formValue.backoff
-        }
+        },
+        attach_file: formValue.attach_file
       };
     }
 
