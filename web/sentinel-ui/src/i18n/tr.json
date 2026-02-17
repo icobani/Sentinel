@@ -110,6 +110,8 @@
     "poll_interval_hint": "ör: 5s, 1m, 30s",
     "timeout_hint": "ör: 10s, 30s, 1m",
     "backoff_hint": "ör: 2s, 5s, 10s",
+    "attach_file": "Dosyayı Webhook'a Ekle",
+    "attach_file_hint": "Değişen dosyanın içeriğini base64 olarak webhook isteğiyle birlikte gönder",
     "validation": {
       "name_required": "İzleyici adı gereklidir",
       "name_unique": "Bu isimde bir izleyici zaten mevcut",
