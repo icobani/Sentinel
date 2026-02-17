@@ -41,7 +41,7 @@ help:
 # ============================================================
 
 # Setup for Windows - full pipeline
-SetupForWin: clean build-win package-win
+SetupForWin: clean build-frontend build-win package-win
 	@echo "$(GREEN)✓ Windows setup package created successfully!$(NC)"
 	@echo "$(YELLOW)Package location: $(WIN_DIR)/setup.zip$(NC)"
 	@python3 -c "import subprocess; import os; path = os.path.abspath('$(WIN_DIR)/setup.zip'); subprocess.run(['osascript', '-e', f'set the clipboard to (POSIX file \"{path}\") as «class furl»'])" 2>/dev/null || true
@@ -96,7 +96,7 @@ package-win:
 # ============================================================
 
 # Setup for macOS - full pipeline
-SetupForMac: clean build-mac package-mac
+SetupForMac: clean build-frontend build-mac package-mac
 	@echo "$(GREEN)✓ macOS setup package created successfully!$(NC)"
 	@echo "$(YELLOW)Package location: $(MAC_DIR)/setup.zip$(NC)"
 	@python3 -c "import subprocess; import os; path = os.path.abspath('$(MAC_DIR)/setup.zip'); subprocess.run(['osascript', '-e', f'set the clipboard to (POSIX file \"{path}\") as «class furl»'])" 2>/dev/null || true
@@ -157,7 +157,7 @@ clean:
 	@echo "$(GREEN)✓ Clean complete$(NC)"
 
 # Build both platforms
-setup-all: clean build-mac build-win package-mac package-win
+setup-all: clean build-frontend build-mac build-win package-mac package-win
 	@echo "$(GREEN)✓ All setup packages created successfully!$(NC)"
 	@echo "$(YELLOW)  Mac package:     $(MAC_DIR)/setup.zip$(NC)"
 	@echo "$(YELLOW)  Windows package:  $(WIN_DIR)/setup.zip$(NC)"
