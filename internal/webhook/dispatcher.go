@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -35,14 +36,15 @@ type dispatchJob struct {
 
 // WebhookPayload represents the JSON payload sent to webhooks
 type WebhookPayload struct {
-	WatcherID   uint      `json:"watcher_id"`
-	WatcherName string    `json:"watcher_name"`
-	Event       string    `json:"event"`
-	FileName    string    `json:"file_name"`
-	FilePath    string    `json:"file_path"`
-	FileSize    int64     `json:"file_size"`
-	OldPath     string    `json:"old_path,omitempty"`
-	Timestamp   time.Time `json:"timestamp"`
+	WatcherID    uint      `json:"watcher_id"`
+	WatcherName  string    `json:"watcher_name"`
+	Event        string    `json:"event"`
+	FileName     string    `json:"file_name"`
+	FilePath     string    `json:"file_path"`
+	FileSize     int64     `json:"file_size"`
+	OldPath      string    `json:"old_path,omitempty"`
+	Timestamp    time.Time `json:"timestamp"`
+	AttachedFile []byte    `json:"attached_file,omitempty"`
 }
 
 // NewDispatcher creates a new webhook dispatcher
@@ -207,6 +209,19 @@ func (d *Dispatcher) processJob(job *dispatchJob) {
 		FileSize:    job.event.FileSize,
 		OldPath:     job.event.OldPath,
 		Timestamp:   job.event.CreatedAt,
+	}
+
+	// Attach file content as base64-encoded bytes when enabled and event is not a deletion
+	if job.watcher.AttachFile && job.event.EventType != "deleted" {
+		fileBytes, err := os.ReadFile(job.event.FilePath)
+		if err != nil {
+			slog.Warn("Failed to read file for attachment, continuing without it",
+				"watcher", job.watcher.Name,
+				"file", job.event.FilePath,
+				"error", err)
+		} else {
+			payload.AttachedFile = fileBytes
+		}
 	}
 
 	payloadBytes, err := json.Marshal(payload)
