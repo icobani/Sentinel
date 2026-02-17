@@ -110,6 +110,8 @@
     "poll_interval_hint": "e.g., 5s, 1m, 30s",
     "timeout_hint": "e.g., 10s, 30s, 1m",
     "backoff_hint": "e.g., 2s, 5s, 10s",
+    "attach_file": "Attach File to Webhook",
+    "attach_file_hint": "Send changed file content as base64 in the webhook payload",
     "validation": {
       "name_required": "Watcher name is required",
       "name_unique": "A watcher with this name already exists",
