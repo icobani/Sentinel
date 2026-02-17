@@ -42,10 +42,11 @@ type FilterConfig struct {
 
 // WebhookConfig represents webhook configuration
 type WebhookConfig struct {
-	URL     string            `mapstructure:"url"`
-	Headers map[string]string `mapstructure:"headers"`
-	Timeout string            `mapstructure:"timeout"`
-	Retry   RetryConfig       `mapstructure:"retry"`
+	URL        string            `mapstructure:"url"`
+	Headers    map[string]string `mapstructure:"headers"`
+	Timeout    string            `mapstructure:"timeout"`
+	Retry      RetryConfig       `mapstructure:"retry"`
+	AttachFile bool              `mapstructure:"attach_file"`
 }
 
 // RetryConfig represents retry configuration
@@ -96,7 +97,7 @@ func Load(configPath string) (*Config, error) {
 	viper.SetConfigType("yaml")
 
 	// Set defaults
-	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.port", 8083)
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.cors.allowed_origins", []string{"*"})
 	viper.SetDefault("server.tls.enabled", false)
@@ -209,7 +210,7 @@ func createDefaultConfig(configPath string) error {
 
 # Server configuration
 server:
-  port: 8080                    # Web UI and API port
+  port: 8083                    # Web UI and API port
   host: "0.0.0.0"               # Listen address (0.0.0.0 = all interfaces)
   cors:
     allowed_origins: ["*"]      # CORS allowed origins (* = all origins)
@@ -230,7 +231,7 @@ database:
   retention: "30d"              # Event log retention period (e.g., 30d, 7d, 24h)
 
 # File watchers configuration
-# Add watchers through the web UI at http://localhost:8080
+# Add watchers through the web UI at http://localhost:8083
 # or edit this section manually following the example format:
 #
 # watchers:
