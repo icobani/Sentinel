@@ -491,6 +491,7 @@ func LoadWatchersFromConfig(watchers []WatcherConfig) error {
 			Timeout:        wc.Webhook.Timeout,
 			MaxRetries:     wc.Webhook.Retry.MaxAttempts,
 			RetryBackoff:   wc.Webhook.Retry.Backoff,
+			AttachFile:     wc.Webhook.AttachFile,
 		}
 
 		if result.Error != nil {
@@ -524,10 +525,11 @@ type WatcherConfig struct {
 		Exclude []string
 	}
 	Webhook struct {
-		URL     string
-		Headers map[string]string
-		Timeout string
-		Retry   struct {
+		URL        string
+		Headers    map[string]string
+		Timeout    string
+		AttachFile bool
+		Retry      struct {
 			MaxAttempts int
 			Backoff     string
 		}
