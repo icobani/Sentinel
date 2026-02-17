@@ -121,6 +121,16 @@
                   </div>
                 </div>
               }
+
+              <div class="config-item">
+                <label>{{ 'setup.attach_file' | translate }}</label>
+                <div class="value">
+                  <mat-icon [class.enabled]="w.webhook?.attach_file">
+                    {{ w.webhook?.attach_file ? 'check_circle' : 'cancel' }}
+                  </mat-icon>
+                  <span>{{ (w.webhook?.attach_file ? 'common.yes' : 'common.no') | translate }}</span>
+                </div>
+              </div>
             }
           </div>
         </mat-card-content>

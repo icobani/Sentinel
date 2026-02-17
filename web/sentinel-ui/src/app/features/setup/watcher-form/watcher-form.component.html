@@ -155,6 +155,13 @@
                 <mat-hint>{{ 'setup.backoff_hint' | translate }}</mat-hint>
               </mat-form-field>
 
+              <div class="toggle-field full-width">
+                <mat-slide-toggle formControlName="attach_file">
+                  {{ 'setup.attach_file' | translate }}
+                </mat-slide-toggle>
+                <p class="field-hint">{{ 'setup.attach_file_hint' | translate }}</p>
+              </div>
+
               <div class="headers-section full-width">
                 <div class="headers-header">
                   <label>{{ 'setup.webhook_headers' | translate }}</label>
