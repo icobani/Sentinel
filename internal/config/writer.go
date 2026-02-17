@@ -260,6 +260,10 @@ func watcherConfigToMap(wc WatcherConfig) map[string]interface{} {
 		webhook["timeout"] = wc.Webhook.Timeout
 	}
 
+	if wc.Webhook.AttachFile {
+		webhook["attach_file"] = wc.Webhook.AttachFile
+	}
+
 	// Add retry config
 	if wc.Webhook.Retry.MaxAttempts > 0 || wc.Webhook.Retry.Backoff != "" {
 		retry := map[string]interface{}{}
