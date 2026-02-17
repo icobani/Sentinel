@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -16,15 +17,23 @@ import (
 var (
 	version   = "dev"
 	buildTime = ""
+	portFlag  int
 )
 
 func main() {
 	// Setup logging
 	setupLogging()
 
+	// Parse flags
+	flag.IntVar(&portFlag, "port", 0, "Override server port (e.g., -port 8085)")
+	flag.Usage = func() { printUsage() }
+	flag.Parse()
+
+	args := flag.Args()
+
 	// Parse command line arguments
-	if len(os.Args) > 1 {
-		command := os.Args[1]
+	if len(args) > 0 {
+		command := args[0]
 
 		switch command {
 		case "install":
@@ -45,10 +54,10 @@ func main() {
 		case "status":
 			handleStatus()
 			return
-		case "version", "-v", "--version":
+		case "version":
 			fmt.Printf("Sentinel File Watcher v%s\n", version)
 			return
-		case "help", "-h", "--help":
+		case "help":
 			printUsage()
 			return
 		case "run":
@@ -75,6 +84,12 @@ func runApplication(configPath string) {
 	if err != nil {
 		slog.Error("Failed to load configuration", "error", err)
 		os.Exit(1)
+	}
+
+	// Override port if specified via flag
+	if portFlag > 0 {
+		cfg.Server.Port = portFlag
+		slog.Info("Port overridden via command line flag", "port", portFlag)
 	}
 
 	// Set version and build time in config
@@ -194,8 +209,12 @@ func printUsage() {
 	fmt.Println("  version   - Show version information")
 	fmt.Println("  help      - Show this help message")
 	fmt.Println()
+	fmt.Println("Flags:")
+	fmt.Println("  -port <port>  Override server port (e.g., -port 8085)")
+	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  sentinel                           # Run with default config (./sentinel.yaml)")
+	fmt.Println("  sentinel -port 8085                # Run on port 8085")
 	fmt.Println("  sentinel run                       # Run in interactive mode")
 	fmt.Println("  sentinel /path/to/config.yaml      # Run with custom config")
 	fmt.Println("  sentinel install                   # Install as service with default config")
