@@ -24,6 +24,7 @@ type Watcher struct {
 	Timeout        string         `json:"timeout"`                          // e.g., "10s"
 	MaxRetries     int            `gorm:"default:3" json:"max_retries"`
 	RetryBackoff   string         `json:"retry_backoff"` // e.g., "2s"
+	AttachFile     bool           `gorm:"default:false" json:"attach_file"`
 }
 
 // Event represents a file system event
