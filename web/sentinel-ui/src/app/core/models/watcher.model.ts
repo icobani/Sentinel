@@ -24,6 +24,7 @@ export interface WebhookConfig {
   headers?: Record<string, string>;
   timeout: string;
   retry?: WebhookRetry;
+  attach_file?: boolean;
 }
 
 export interface Watcher {
