@@ -68,7 +68,8 @@ brew install icobani/sentinel/sentinel
 sentinel
 ```
 
-On first run, Sentinel automatically creates a default `sentinel.yaml` in the current directory if one doesn't exist. You can then add watchers through the web UI at `http://localhost:8080` or edit the config file directly.
+On first run, Sentinel automatically creates a default `sentinel.yaml` in the current directory if one doesn't exist.
+You can then add watchers through the web UI at `http://localhost:8083` or edit the config file directly.
 
 ### Windows (Scoop)
 
@@ -203,7 +204,7 @@ watchers:
         backoff: 2s
 
 server:
-  port: 8080
+  port: 8083
   host: "0.0.0.0"
 
 database:
