@@ -443,6 +443,7 @@ func convertToWatcherConfigs(cfgs []config.WatcherConfig) []watcher.WatcherConfi
 		result[i].Webhook.URL = cfg.Webhook.URL
 		result[i].Webhook.Headers = cfg.Webhook.Headers
 		result[i].Webhook.Timeout = cfg.Webhook.Timeout
+		result[i].Webhook.AttachFile = cfg.Webhook.AttachFile
 		result[i].Webhook.Retry.MaxAttempts = cfg.Webhook.Retry.MaxAttempts
 		result[i].Webhook.Retry.Backoff = cfg.Webhook.Retry.Backoff
 	}
