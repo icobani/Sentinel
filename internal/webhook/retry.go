@@ -3,6 +3,7 @@ package webhook
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ func SendWithRetry(
 	timeout time.Duration,
 	maxRetries int,
 	initialBackoff time.Duration,
+	skipTLSVerify bool,
 ) (statusCode int, success bool, errMsg string, responseBody string, retryCount int) {
 	var lastErr error
 	var lastStatusCode int
@@ -68,6 +70,11 @@ func SendWithRetry(
 		// Create client with timeout
 		client := &http.Client{
 			Timeout: timeout,
+		}
+		if skipTLSVerify {
+			client.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			}
 		}
 
 		// Send request
