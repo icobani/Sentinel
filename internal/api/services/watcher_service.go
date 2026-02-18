@@ -42,11 +42,12 @@ type FilterRequest struct {
 
 // WebhookRequest represents webhook configuration
 type WebhookRequest struct {
-	URL        string            `json:"url" binding:"required"`
-	Headers    map[string]string `json:"headers"`
-	Timeout    string            `json:"timeout"`
-	Retry      RetryRequest      `json:"retry"`
-	AttachFile bool              `json:"attach_file"`
+	URL           string            `json:"url" binding:"required"`
+	Headers       map[string]string `json:"headers"`
+	Timeout       string            `json:"timeout"`
+	Retry         RetryRequest      `json:"retry"`
+	AttachFile    bool              `json:"attach_file"`
+	SkipTLSVerify bool              `json:"skip_tls_verify"`
 }
 
 // RetryRequest represents retry configuration
@@ -213,6 +214,7 @@ func (s *WatcherService) CreateWatcher(req CreateWatcherRequest) (*WatcherRespon
 		MaxRetries:     req.Webhook.Retry.MaxAttempts,
 		RetryBackoff:   req.Webhook.Retry.Backoff,
 		AttachFile:     req.Webhook.AttachFile,
+		SkipTLSVerify:  req.Webhook.SkipTLSVerify,
 	}
 
 	if err := storage.CreateWatcher(&w); err != nil {
@@ -231,10 +233,11 @@ func (s *WatcherService) CreateWatcher(req CreateWatcherRequest) (*WatcherRespon
 			Exclude: req.Filters.Exclude,
 		},
 		Webhook: config.WebhookConfig{
-			URL:        req.Webhook.URL,
-			Headers:    req.Webhook.Headers,
-			Timeout:    req.Webhook.Timeout,
-			AttachFile: req.Webhook.AttachFile,
+			URL:           req.Webhook.URL,
+			Headers:       req.Webhook.Headers,
+			Timeout:       req.Webhook.Timeout,
+			AttachFile:    req.Webhook.AttachFile,
+			SkipTLSVerify: req.Webhook.SkipTLSVerify,
 			Retry: config.RetryConfig{
 				MaxAttempts: req.Webhook.Retry.MaxAttempts,
 				Backoff:     req.Webhook.Retry.Backoff,
@@ -363,6 +366,7 @@ func (s *WatcherService) UpdateWatcher(id uint, req CreateWatcherRequest) (*Watc
 	w.MaxRetries = req.Webhook.Retry.MaxAttempts
 	w.RetryBackoff = req.Webhook.Retry.Backoff
 	w.AttachFile = req.Webhook.AttachFile
+	w.SkipTLSVerify = req.Webhook.SkipTLSVerify
 
 	if err := storage.UpdateWatcher(w); err != nil {
 		return nil, fmt.Errorf("failed to update watcher: %w", err)
@@ -380,10 +384,11 @@ func (s *WatcherService) UpdateWatcher(id uint, req CreateWatcherRequest) (*Watc
 			Exclude: req.Filters.Exclude,
 		},
 		Webhook: config.WebhookConfig{
-			URL:        req.Webhook.URL,
-			Headers:    req.Webhook.Headers,
-			Timeout:    req.Webhook.Timeout,
-			AttachFile: req.Webhook.AttachFile,
+			URL:           req.Webhook.URL,
+			Headers:       req.Webhook.Headers,
+			Timeout:       req.Webhook.Timeout,
+			AttachFile:    req.Webhook.AttachFile,
+			SkipTLSVerify: req.Webhook.SkipTLSVerify,
 			Retry: config.RetryConfig{
 				MaxAttempts: req.Webhook.Retry.MaxAttempts,
 				Backoff:     req.Webhook.Retry.Backoff,
@@ -528,10 +533,11 @@ func watcherToResponse(w *storage.Watcher, isRunning bool) WatcherResponse {
 		PollInterval: w.PollInterval,
 		Filters:      filters,
 		Webhook: WebhookRequest{
-			URL:        w.WebhookURL,
-			Headers:    headers,
-			Timeout:    w.Timeout,
-			AttachFile: w.AttachFile,
+			URL:           w.WebhookURL,
+			Headers:       headers,
+			Timeout:       w.Timeout,
+			AttachFile:    w.AttachFile,
+			SkipTLSVerify: w.SkipTLSVerify,
 			Retry: RetryRequest{
 				MaxAttempts: w.MaxRetries,
 				Backoff:     w.RetryBackoff,
