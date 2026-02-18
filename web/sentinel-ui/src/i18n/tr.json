@@ -112,6 +112,8 @@
     "backoff_hint": "ör: 2s, 5s, 10s",
     "attach_file": "Dosyayı Webhook'a Ekle",
     "attach_file_hint": "Değişen dosyanın içeriğini base64 olarak webhook isteğiyle birlikte gönder",
+    "skip_tls_verify": "TLS Doğrulamasını Atla",
+    "skip_tls_verify_hint": "Self-signed sertifikalı sunucular için TLS doğrulamasını atlar",
     "validation": {
       "name_required": "İzleyici adı gereklidir",
       "name_unique": "Bu isimde bir izleyici zaten mevcut",
