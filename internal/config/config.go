@@ -42,11 +42,12 @@ type FilterConfig struct {
 
 // WebhookConfig represents webhook configuration
 type WebhookConfig struct {
-	URL        string            `mapstructure:"url"`
-	Headers    map[string]string `mapstructure:"headers"`
-	Timeout    string            `mapstructure:"timeout"`
-	Retry      RetryConfig       `mapstructure:"retry"`
-	AttachFile bool              `mapstructure:"attach_file"`
+	URL           string            `mapstructure:"url"`
+	Headers       map[string]string `mapstructure:"headers"`
+	Timeout       string            `mapstructure:"timeout"`
+	Retry         RetryConfig       `mapstructure:"retry"`
+	AttachFile    bool              `mapstructure:"attach_file"`
+	SkipTLSVerify bool              `mapstructure:"skip_tls_verify"`
 }
 
 // RetryConfig represents retry configuration
