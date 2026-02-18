@@ -25,6 +25,7 @@ export interface WebhookConfig {
   timeout: string;
   retry?: WebhookRetry;
   attach_file?: boolean;
+  skip_tls_verify?: boolean;
 }
 
 export interface Watcher {
