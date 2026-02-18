@@ -109,7 +109,8 @@ export class WatcherFormComponent implements OnInit {
       webhook_headers: this.fb.array([]),
       max_attempts: [3, [Validators.required, Validators.min(1)]],
       backoff: ['2s', Validators.required],
-      attach_file: [false]
+      attach_file: [false],
+      skip_tls_verify: [false]
     });
   }
 
@@ -148,7 +149,8 @@ export class WatcherFormComponent implements OnInit {
       webhook_timeout: watcher.webhook?.timeout || '10s',
       max_attempts: watcher.webhook?.retry?.max_attempts || 3,
       backoff: watcher.webhook?.retry?.backoff || '2s',
-      attach_file: watcher.webhook?.attach_file || false
+      attach_file: watcher.webhook?.attach_file || false,
+      skip_tls_verify: watcher.webhook?.skip_tls_verify || false
     });
 
     if (watcher.webhook?.headers) {
@@ -316,7 +318,8 @@ export class WatcherFormComponent implements OnInit {
           max_attempts: formValue.max_attempts,
           backoff: formValue.backoff
         },
-        attach_file: formValue.attach_file
+        attach_file: formValue.attach_file,
+        skip_tls_verify: formValue.skip_tls_verify
       };
     }
 
