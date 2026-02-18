@@ -131,6 +131,16 @@
                   <span>{{ (w.webhook?.attach_file ? 'common.yes' : 'common.no') | translate }}</span>
                 </div>
               </div>
+
+              <div class="config-item">
+                <label>{{ 'setup.skip_tls_verify' | translate }}</label>
+                <div class="value">
+                  <mat-icon [class.enabled]="w.webhook?.skip_tls_verify">
+                    {{ w.webhook?.skip_tls_verify ? 'check_circle' : 'cancel' }}
+                  </mat-icon>
+                  <span>{{ (w.webhook?.skip_tls_verify ? 'common.yes' : 'common.no') | translate }}</span>
+                </div>
+              </div>
             }
           </div>
         </mat-card-content>

@@ -162,6 +162,13 @@
                 <p class="field-hint">{{ 'setup.attach_file_hint' | translate }}</p>
               </div>
 
+              <div class="toggle-field full-width">
+                <mat-slide-toggle formControlName="skip_tls_verify">
+                  {{ 'setup.skip_tls_verify' | translate }}
+                </mat-slide-toggle>
+                <p class="field-hint">{{ 'setup.skip_tls_verify_hint' | translate }}</p>
+              </div>
+
               <div class="headers-section full-width">
                 <div class="headers-header">
                   <label>{{ 'setup.webhook_headers' | translate }}</label>
