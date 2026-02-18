@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/sentinel/sentinel/internal/api"
 	"github.com/sentinel/sentinel/internal/config"
@@ -21,7 +23,7 @@ var (
 )
 
 func main() {
-	// Setup logging
+	// Setup logging with sensible defaults before config is loaded.
 	setupLogging()
 
 	// Parse flags
@@ -64,20 +66,41 @@ func main() {
 			// Continue to run in interactive mode
 			break
 		default:
-			// If it's not a known command, treat it as a config file path
-			// Allow non-existent paths as the config loader will create default config
+			// If it's not a known command, treat it as a config file path.
+			// This is also the path used when Windows SCM starts the binary
+			// with the config path as a command-line argument (set by Install).
 			runApplication(command)
 			return
 		}
 	}
 
-	// Default: run in interactive mode with default config
+	// Default: run with default config path.
 	runApplication("./sentinel.yaml")
+}
+
+// resolveConfigPath converts a possibly-relative config path to an absolute
+// one. When the binary is launched by Windows SCM the working directory is
+// C:\Windows\System32, so relative paths would not work. We resolve relative
+// paths relative to the executable's directory instead.
+func resolveConfigPath(configPath string) string {
+	if filepath.IsAbs(configPath) {
+		return configPath
+	}
+	exePath, err := os.Executable()
+	if err != nil {
+		return configPath
+	}
+	return filepath.Join(filepath.Dir(exePath), configPath)
 }
 
 // runApplication runs the main application logic
 func runApplication(configPath string) {
-	slog.Info("Starting Sentinel file watcher service", "version", version)
+	// Always work with an absolute config path so that the process works
+	// correctly regardless of the current working directory (important when
+	// started by Windows SCM from C:\Windows\System32).
+	configPath = resolveConfigPath(configPath)
+
+	slog.Info("Starting Sentinel file watcher service", "version", version, "config", configPath)
 
 	// Load configuration
 	cfg, err := config.Load(configPath)
@@ -115,10 +138,23 @@ func runApplication(configPath string) {
 	// Setup router with embedded frontend
 	router := api.SetupRouter(cfg, subFS)
 
-	// Run in interactive mode (handles graceful shutdown)
-	if err := service.RunInteractive(cfg, router); err != nil {
-		slog.Error("Application error", "error", err)
-		os.Exit(1)
+	// Detect whether we are running under a service manager (SCM / systemd /
+	// launchd) or interactively. When launched by Windows SCM the process is
+	// NOT interactive and must call service.Run() to register with SCM,
+	// otherwise the SCM will report Error 1053 (service did not respond in
+	// time).
+	if service.IsInteractive() {
+		// Interactive mode: handle SIGINT/SIGTERM ourselves.
+		if err := service.RunInteractive(cfg, router); err != nil {
+			slog.Error("Application error", "error", err)
+			os.Exit(1)
+		}
+	} else {
+		// Service mode: register with the OS service manager.
+		if err := service.Run(cfg, router); err != nil {
+			slog.Error("Service run error", "error", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -228,22 +264,23 @@ func printUsage() {
 	fmt.Println("  macOS:   Installs as launchd service")
 }
 
-// setupLogging configures the logging system with default settings
-// This is called before config is loaded to ensure we have logging during startup
+// setupLogging configures the logging system with default settings.
+// Called before config is loaded to ensure we have logging during startup.
 func setupLogging() {
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}
 	handler := slog.NewTextHandler(os.Stdout, opts)
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	slog.SetDefault(slog.New(handler))
 }
 
-// reconfigureLogging reconfigures the logging system with the level from config
+// reconfigureLogging reconfigures the logging system with the level from
+// config. In interactive mode logs go to stdout (and optionally a file).
+// In service mode, logging is configured inside service.Run() which routes
+// output to the platform's service logger (Windows Event Log, syslog, etc.).
 func reconfigureLogging(cfg *config.Config) {
 	var level slog.Level
 
-	// Parse the level string from config
 	switch cfg.Logging.Level {
 	case "debug":
 		level = slog.LevelDebug
@@ -258,13 +295,23 @@ func reconfigureLogging(cfg *config.Config) {
 		slog.Warn("Unknown log level, defaulting to info", "configured_level", cfg.Logging.Level)
 	}
 
-	// Create new handler with the configured level
-	opts := &slog.HandlerOptions{
-		Level: level,
+	opts := &slog.HandlerOptions{Level: level}
+
+	var writer io.Writer = os.Stdout
+
+	// If a log file is configured, write to both stdout and the file.
+	if cfg.Logging.File != "" {
+		logFile, err := os.OpenFile(cfg.Logging.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			slog.Warn("Failed to open log file, logging to stdout only",
+				"path", cfg.Logging.File, "error", err)
+		} else {
+			writer = io.MultiWriter(os.Stdout, logFile)
+		}
 	}
-	handler := slog.NewTextHandler(os.Stdout, opts)
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+
+	handler := slog.NewTextHandler(writer, opts)
+	slog.SetDefault(slog.New(handler))
 
 	slog.Info("Logging reconfigured", "level", cfg.Logging.Level)
 }
