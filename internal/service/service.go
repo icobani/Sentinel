@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -25,11 +26,15 @@ type Program struct {
 	errorLogger chan struct{} // Signal to stop error logger goroutine
 }
 
-// serviceConfig holds the service configuration
-var serviceConfig = &service.Config{
-	Name:        "Sentinel",
-	DisplayName: "Sentinel File Watcher",
-	Description: "Cross-platform file system watcher and webhook notification service",
+// newServiceConfig returns the base service configuration (name only).
+// Used by Uninstall, Start, Stop, Restart, Status, and Run — operations
+// that only need to identify the service, not configure how it launches.
+func newServiceConfig() *service.Config {
+	return &service.Config{
+		Name:        "Sentinel",
+		DisplayName: "Sentinel File Watcher",
+		Description: "Cross-platform file system watcher and webhook notification service",
+	}
 }
 
 // Start is called when the service is starting
@@ -99,34 +104,52 @@ func (p *Program) Stop(s service.Service) error {
 	return nil
 }
 
-// Install installs the service
+// Install installs the service with the given config path embedded in the
+// service arguments and the executable directory as the working directory.
 func Install(configPath string) error {
-	// Create service
+	// Resolve the config path to an absolute path so Windows SCM can find it
+	// regardless of the working directory at launch time.
+	absConfigPath, err := filepath.Abs(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to resolve config path: %w", err)
+	}
+
+	// Determine the executable path so we can set a sensible WorkingDirectory.
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("failed to get executable path: %w", err)
+	}
+
+	// Build a fresh config that includes launch-time Arguments and WorkingDirectory.
+	cfg := newServiceConfig()
+	cfg.Arguments = []string{absConfigPath}
+	cfg.WorkingDirectory = filepath.Dir(exePath)
+
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Install service
 	if err := s.Install(); err != nil {
 		return fmt.Errorf("failed to install service: %w", err)
 	}
 
-	slog.Info("Service installed successfully")
+	slog.Info("Service installed successfully",
+		"config", absConfigPath,
+		"working_dir", cfg.WorkingDirectory,
+	)
 	return nil
 }
 
 // Uninstall removes the service
 func Uninstall() error {
-	// Create service
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Uninstall service
 	if err := s.Uninstall(); err != nil {
 		return fmt.Errorf("failed to uninstall service: %w", err)
 	}
@@ -137,14 +160,12 @@ func Uninstall() error {
 
 // Start starts the service
 func Start() error {
-	// Create service
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Start service
 	if err := s.Start(); err != nil {
 		return fmt.Errorf("failed to start service: %w", err)
 	}
@@ -155,14 +176,12 @@ func Start() error {
 
 // Stop stops the service
 func Stop() error {
-	// Create service
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Stop service
 	if err := s.Stop(); err != nil {
 		return fmt.Errorf("failed to stop service: %w", err)
 	}
@@ -173,14 +192,12 @@ func Stop() error {
 
 // Restart restarts the service
 func Restart() error {
-	// Create service
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Restart service
 	if err := s.Restart(); err != nil {
 		return fmt.Errorf("failed to restart service: %w", err)
 	}
@@ -189,31 +206,58 @@ func Restart() error {
 	return nil
 }
 
-// Run runs the service (main application logic)
+// IsInteractive reports whether the process is running interactively (i.e. not
+// as a managed Windows/Linux/macOS service). It delegates to the
+// kardianos/service package-level Interactive() function which queries the OS.
+func IsInteractive() bool {
+	return service.Interactive()
+}
+
+// Run runs the service under Windows SCM / systemd / launchd. It must be
+// called (instead of RunInteractive) when the binary is launched by the
+// service manager, because s.Run() registers the process with the SCM and
+// handles Start/Stop callbacks.
 func Run(cfg *config.Config, router http.Handler) error {
-	// Create program
 	prg := &Program{
 		cfg:  cfg,
 		exit: make(chan struct{}),
 	}
 
-	// Create service
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Setup service logger
+	// Setup service logger (writes to Windows Event Log / syslog / launchd)
 	errs := make(chan error, 5)
 	logger, err := s.Logger(errs)
 	if err != nil {
 		return fmt.Errorf("failed to create service logger: %w", err)
 	}
 
+	// Build a multi-handler: Event Viewer + optional log file
+	var handlers []slog.Handler
+	handlers = append(handlers, newServiceLogHandler(logger, parseLogLevel(cfg.Logging.Level)))
+
+	if cfg.Logging.File != "" {
+		logFile, openErr := os.OpenFile(cfg.Logging.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if openErr != nil {
+			// Non-fatal: log the issue and continue with Event Log only.
+			_ = logger.Warning(fmt.Sprintf("failed to open log file %s: %v", cfg.Logging.File, openErr))
+		} else {
+			fileHandler := slog.NewTextHandler(logFile, &slog.HandlerOptions{
+				Level: parseLogLevel(cfg.Logging.Level),
+			})
+			handlers = append(handlers, fileHandler)
+		}
+	}
+
+	slog.SetDefault(slog.New(&multiHandler{handlers: handlers}))
+
 	// Initialize error logger stop channel
 	prg.errorLogger = make(chan struct{})
 
-	// Log errors in background
+	// Log service-level errors in background
 	go func() {
 		for {
 			select {
@@ -222,7 +266,6 @@ func Run(cfg *config.Config, router http.Handler) error {
 					slog.Error("Service error", "error", err)
 				}
 			case <-prg.errorLogger:
-				// Graceful shutdown of error logger
 				slog.Debug("Error logger goroutine stopping")
 				return
 			}
@@ -247,7 +290,6 @@ func Run(cfg *config.Config, router http.Handler) error {
 			slog.Info("Sentinel UI available", "url", fmt.Sprintf("https://localhost:%d", cfg.Server.Port))
 			err = prg.server.ListenAndServeTLS(cfg.Server.TLS.CertFile, cfg.Server.TLS.KeyFile)
 
-			// If TLS fails, try falling back to HTTP
 			if err != nil && err != http.ErrServerClosed {
 				slog.Error("Failed to start HTTPS server, falling back to HTTP", "error", err)
 				cfg.Server.TLS.Enabled = false
@@ -263,13 +305,13 @@ func Run(cfg *config.Config, router http.Handler) error {
 
 		if err != nil && err != http.ErrServerClosed {
 			slog.Error("Server error", "error", err)
-			logger.Error(err)
+			_ = logger.Error(err)
 		}
 	}()
 
 	slog.Info("Server started successfully", "address", addr)
 
-	// Run service
+	// Block until the SCM sends a Stop signal
 	if err := s.Run(); err != nil {
 		return fmt.Errorf("service run error: %w", err)
 	}
@@ -279,14 +321,12 @@ func Run(cfg *config.Config, router http.Handler) error {
 
 // Status returns the service status
 func Status() error {
-	// Create service
 	prg := &Program{}
-	s, err := service.New(prg, serviceConfig)
+	s, err := service.New(prg, newServiceConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 
-	// Get status
 	status, err := s.Status()
 	if err != nil {
 		return fmt.Errorf("failed to get service status: %w", err)
@@ -444,8 +484,122 @@ func convertToWatcherConfigs(cfgs []config.WatcherConfig) []watcher.WatcherConfi
 		result[i].Webhook.Headers = cfg.Webhook.Headers
 		result[i].Webhook.Timeout = cfg.Webhook.Timeout
 		result[i].Webhook.AttachFile = cfg.Webhook.AttachFile
+		result[i].Webhook.SkipTLSVerify = cfg.Webhook.SkipTLSVerify
 		result[i].Webhook.Retry.MaxAttempts = cfg.Webhook.Retry.MaxAttempts
 		result[i].Webhook.Retry.Backoff = cfg.Webhook.Retry.Backoff
 	}
 	return result
+}
+
+// parseLogLevel converts a logging level string to the corresponding slog.Level.
+func parseLogLevel(level string) slog.Level {
+	switch level {
+	case "debug":
+		return slog.LevelDebug
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
+
+// ---------------------------------------------------------------------------
+// serviceLogHandler — bridges slog to kardianos/service Logger (Event Viewer)
+// ---------------------------------------------------------------------------
+
+type serviceLogHandler struct {
+	logger service.Logger
+	level  slog.Level
+	attrs  []slog.Attr
+	groups []string
+}
+
+func newServiceLogHandler(logger service.Logger, level slog.Level) *serviceLogHandler {
+	return &serviceLogHandler{logger: logger, level: level}
+}
+
+func (h *serviceLogHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= h.level
+}
+
+func (h *serviceLogHandler) Handle(_ context.Context, r slog.Record) error {
+	msg := r.Message
+	// Append structured attributes to the message string.
+	r.Attrs(func(a slog.Attr) bool {
+		msg += " " + a.Key + "=" + a.Value.String()
+		return true
+	})
+
+	switch {
+	case r.Level >= slog.LevelError:
+		return h.logger.Error(msg)
+	case r.Level >= slog.LevelWarn:
+		return h.logger.Warning(msg)
+	default:
+		return h.logger.Info(msg)
+	}
+}
+
+func (h *serviceLogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &serviceLogHandler{
+		logger: h.logger,
+		level:  h.level,
+		attrs:  append(h.attrs, attrs...),
+		groups: h.groups,
+	}
+}
+
+func (h *serviceLogHandler) WithGroup(name string) slog.Handler {
+	return &serviceLogHandler{
+		logger: h.logger,
+		level:  h.level,
+		attrs:  h.attrs,
+		groups: append(h.groups, name),
+	}
+}
+
+// ---------------------------------------------------------------------------
+// multiHandler — fans slog records out to multiple slog.Handler instances
+// ---------------------------------------------------------------------------
+
+type multiHandler struct {
+	handlers []slog.Handler
+}
+
+func (m *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	for _, h := range m.handlers {
+		if h.Enabled(ctx, level) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *multiHandler) Handle(ctx context.Context, r slog.Record) error {
+	for _, h := range m.handlers {
+		if h.Enabled(ctx, r.Level) {
+			if err := h.Handle(ctx, r); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	newHandlers := make([]slog.Handler, len(m.handlers))
+	for i, h := range m.handlers {
+		newHandlers[i] = h.WithAttrs(attrs)
+	}
+	return &multiHandler{handlers: newHandlers}
+}
+
+func (m *multiHandler) WithGroup(name string) slog.Handler {
+	newHandlers := make([]slog.Handler, len(m.handlers))
+	for i, h := range m.handlers {
+		newHandlers[i] = h.WithGroup(name)
+	}
+	return &multiHandler{handlers: newHandlers}
 }
