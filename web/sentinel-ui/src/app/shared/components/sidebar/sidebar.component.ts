@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslatePipe } from '../../pipes/translate.pipe';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterModule} from '@angular/router';
+import {MatListModule} from '@angular/material/list';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslatePipe} from '../../pipes/translate.pipe';
 
 export interface MenuItem {
   labelKey: string;
@@ -50,7 +50,7 @@ export interface MenuItem {
 
       <div class="powered-by" *ngIf="!collapsed">
         <span class="powered-label">Powered by</span>
-        <span class="powered-company">Sentinel</span>
+        <a href="https://www.icitech.com.tr" target="_blank" rel="noopener noreferrer" class="powered-company">Ici Tech Teknoloji</a>
       </div>
     </div>
   `,
@@ -189,6 +189,12 @@ export interface MenuItem {
       font-size: 13px;
       font-weight: 600;
       color: #e2e8f0;
+      text-decoration: none;
+    }
+
+    .powered-company:hover {
+      color: #ffffff;
+      text-decoration: underline;
     }
 
     // Responsive behavior
