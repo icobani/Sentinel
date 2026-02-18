@@ -25,6 +25,7 @@ type Watcher struct {
 	MaxRetries     int            `gorm:"default:3" json:"max_retries"`
 	RetryBackoff   string         `json:"retry_backoff"` // e.g., "2s"
 	AttachFile     bool           `gorm:"default:false" json:"attach_file"`
+	SkipTLSVerify  bool           `gorm:"default:false" json:"skip_tls_verify"`
 }
 
 // Event represents a file system event
