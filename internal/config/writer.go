@@ -264,6 +264,10 @@ func watcherConfigToMap(wc WatcherConfig) map[string]interface{} {
 		webhook["attach_file"] = wc.Webhook.AttachFile
 	}
 
+	if wc.Webhook.SkipTLSVerify {
+		webhook["skip_tls_verify"] = wc.Webhook.SkipTLSVerify
+	}
+
 	// Add retry config
 	if wc.Webhook.Retry.MaxAttempts > 0 || wc.Webhook.Retry.Backoff != "" {
 		retry := map[string]interface{}{}
