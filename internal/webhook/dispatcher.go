@@ -3,6 +3,7 @@ package webhook
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -242,6 +243,7 @@ func (d *Dispatcher) processJob(job *dispatchJob) {
 		timeout,
 		maxRetries,
 		backoff,
+		job.watcher.SkipTLSVerify,
 	)
 
 	responseTime := time.Since(startTime).Milliseconds()
@@ -358,6 +360,11 @@ func (d *Dispatcher) SendTestWebhook(w *storage.Watcher) (int, bool, string, err
 	}
 
 	client := &http.Client{Timeout: timeout}
+	if w.SkipTLSVerify {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+		}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return 0, false, err.Error(), err
