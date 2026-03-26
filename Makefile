@@ -20,7 +20,8 @@ YELLOW=\033[0;33m
 RED=\033[0;31m
 NC=\033[0m # No Color
 
-.PHONY: help SetupForMac SetupForWin clean build-mac build-win package-mac package-win build-frontend setup-all
+.PHONY: help SetupForMac SetupForWin clean build-mac build-win package-mac package-win build-frontend setup-all \
+       release release-snapshot release-dry-run release-check
 
 # Default target
 help:
@@ -177,3 +178,37 @@ setup-all: clean build-frontend build-mac build-win package-mac package-win
 	@echo "$(GREEN)✓ All setup packages created successfully!$(NC)"
 	@echo "$(YELLOW)  Mac package:     $(MAC_DIR)/setup.zip$(NC)"
 	@echo "$(YELLOW)  Windows package:  $(WIN_DIR)/setup.zip$(NC)"
+
+# ============================================================
+# GoReleaser Pro
+# ============================================================
+
+# Full release (requires GORELEASER_KEY env var)
+# Usage: make release tag=v1.2.3
+release: build-frontend
+	@echo "$(YELLOW)Creating release with GoReleaser Pro...$(NC)"
+ifdef tag
+	@git tag -a $(tag) -m "Release $(tag)"
+	@echo "$(GREEN)  Tag $(tag) created$(NC)"
+endif
+	goreleaser release --clean
+	@echo "$(GREEN)✓ Release completed!$(NC)"
+
+# Snapshot build — no tag needed, no publish, perfect for local testing
+release-snapshot: build-frontend
+	@echo "$(YELLOW)Building snapshot with GoReleaser Pro...$(NC)"
+	goreleaser release --snapshot --clean
+	@echo "$(GREEN)✓ Snapshot build completed!$(NC)"
+	@echo "$(YELLOW)  Artifacts: ./dist/$(NC)"
+
+# Dry run — validates config and simulates the release without publishing
+release-dry-run: build-frontend
+	@echo "$(YELLOW)Dry run with GoReleaser Pro...$(NC)"
+	goreleaser release --skip=publish --clean
+	@echo "$(GREEN)✓ Dry run completed!$(NC)"
+
+# Validate .goreleaser.yaml config
+release-check:
+	@echo "$(YELLOW)Validating GoReleaser config...$(NC)"
+	goreleaser check
+	@echo "$(GREEN)✓ Config is valid!$(NC)"

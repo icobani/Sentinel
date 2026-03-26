@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema-pro.json
+# GoReleaser Pro configuration for Sentinel File Watcher
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    # Build Angular frontend before Go compilation (embedded via go:embed)
+    - cmd: bash -c "cd web/sentinel-ui && npm ci && npm run build"
+
+builds:
+  - id: sentinel
+    main: ./cmd/sentinel
+    binary: sentinel
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.buildTime={{ .Date }}
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      sentinel_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - sentinel.yaml
+      - LICENSE*
+      - README*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  use: github-native
+
+release:
+  github:
+    owner: icobani
+    name: Sentinel
+  draft: false
+  prerelease: auto
+  name_template: "Sentinel v{{ .Version }}"
+  header: |
+    ## Sentinel File Watcher v{{ .Version }}
+
+    Cross-platform file system watcher with real-time webhook notifications and web-based management interface.
+  footer: |
+    ---
+
+    **Full Changelog**: https://github.com/icobani/Sentinel/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ### Installation
+
+    **Homebrew (macOS/Linux):**
+    ```bash
+    brew install icobani/sentinel/sentinel
+    ```
+
+    **Scoop (Windows):**
+    ```powershell
+    scoop bucket add sentinel https://github.com/icobani/scoop-sentinel
+    scoop install sentinel
+    ```
+
+homebrew_casks:
+  - name: sentinel
+    binaries:
+      - sentinel
+    repository:
+      owner: icobani
+      name: homebrew-sentinel
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: github-actions[bot]
+      email: github-actions[bot]@users.noreply.github.com
+    directory: Casks
+    homepage: "https://github.com/icobani/Sentinel"
+    description: "Cross-platform file system watcher with real-time webhook notifications"
+
+scoops:
+  - name: sentinel
+    repository:
+      owner: icobani
+      name: scoop-sentinel
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: github-actions[bot]
+      email: github-actions[bot]@users.noreply.github.com
+    homepage: "https://github.com/icobani/Sentinel"
+    description: "Cross-platform file system watcher with real-time webhook notifications and web-based management interface"
+    license: MIT
