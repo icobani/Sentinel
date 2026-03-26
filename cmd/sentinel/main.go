@@ -129,7 +129,7 @@ func runApplication(configPath string) {
 	}
 
 	// Create sub FS from embedded frontend (strip dist/browser prefix)
-	subFS, err := fs.Sub(frontend.FrontendFS, "dist/browser")
+	subFS, err := fs.Sub(frontend.FrontendFS, "frontend/dist/browser")
 	if err != nil {
 		slog.Error("Failed to create sub filesystem for frontend", "error", err)
 		os.Exit(1)
