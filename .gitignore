@@ -46,10 +46,13 @@ sentinel.yaml
 
 
 # Angular
-/dist/
+/frontend/dist/
 web/sentinel-ui/node_modules/
 web/sentinel-ui/.angular/
 web/sentinel-ui/dist/
+
+# GoReleaser
+/dist/
 
 # OS
 .DS_Store
