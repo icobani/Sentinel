@@ -2,5 +2,5 @@ package sentinel
 
 import "embed"
 
-//go:embed all:dist/browser
+//go:embed all:frontend/dist/browser
 var FrontendFS embed.FS
